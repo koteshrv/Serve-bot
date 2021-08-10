@@ -8,7 +8,7 @@
 #define SD_ChipSelectPin 53
 #define echoPin 23
 #define trigPin 10
-#define threshold 900
+#define threshold 910
 #define record_pin 32
 #define record_button 3
 #define play_button 2
@@ -147,6 +147,8 @@ int IR_status(int ar[]) {
 
   int stop[12]      =        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
+  int noPath[12]    =         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
   int forward1[12]  =        {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0};
   int forward2[12]  =        {0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0};
   int forward3[12]  =        {0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0};
@@ -196,6 +198,8 @@ int IR_status(int ar[]) {
   if (check(ar, right6)) return 3;
   if (check(ar, right7)) return 3;
 
+  if (check(ar, noPath)) return 4;
+
   return -1;
 }
 
@@ -243,7 +247,7 @@ void loop()
         isRecording = false;
         tmrpcm.play("stop_audio.wav");
         stopped_time = millis();
-        while(millis() - stopped_time < 15000 && !isRecording);
+        while(millis() - stopped_time < 10000 && !isRecording);
         tmrpcm.disable();
         if(isRecording) {
           digitalWrite(record_led, HIGH);
@@ -280,15 +284,15 @@ void loop()
   }
     else if (IR_status(statusSensor) == 1) {
       digitalWrite(dir_pins[0], LOW);
-      analogWrite(pwm_pins[0], 100);
+      analogWrite(pwm_pins[0], 160);//220
       digitalWrite(dir_pins[1], LOW);
-      analogWrite(pwm_pins[1], 100);
+      analogWrite(pwm_pins[1], 160);
       Serial.print("Moving Forward\n");
     }
 
     else if (IR_status(statusSensor) == 2) {
       digitalWrite(dir_pins[0], LOW);
-      analogWrite(pwm_pins[0], 70);
+      analogWrite(pwm_pins[0], 100);//150
       digitalWrite(dir_pins[1], LOW);
       analogWrite(pwm_pins[1], 0);
       Serial.print("Moving Left\n");
@@ -298,16 +302,22 @@ void loop()
       digitalWrite(dir_pins[0], LOW);
       analogWrite(pwm_pins[0], 0);
       digitalWrite(dir_pins[1], LOW);
-      analogWrite(pwm_pins[1], 70);
+      analogWrite(pwm_pins[1], 100);
       Serial.print("Moving Right\n");
     }
 
-
+    else if (IR_status(statusSensor) == 4) {
+      digitalWrite(dir_pins[0], LOW);
+      analogWrite(pwm_pins[0], 0);
+      digitalWrite(dir_pins[1], LOW);
+      analogWrite(pwm_pins[1], 0);
+      Serial.print("Out of Track\n");
+    }
     else {
       digitalWrite(dir_pins[0], LOW);
-      analogWrite(pwm_pins[0], 60);
+      analogWrite(pwm_pins[0], 80);//200
       digitalWrite(dir_pins[1], LOW);
-      analogWrite(pwm_pins[1], 60);
+      analogWrite(pwm_pins[1], 80);
       Serial.print("Invalid path\n");
       tmrpcm.play("invalid_path_audio.wav");
     }
